@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=HMM Bot
+Comment=BTC/USD regime detection and Telegram signals
+Exec=hmm-bot
+Icon=hmm-bot
+Terminal=false
+Type=Application
+Categories=Finance;Utility;

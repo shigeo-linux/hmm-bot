@@ -1,0 +1,8 @@
+[Unit]
+Description=HMM Bot — BTC/USD regime detection and Telegram signal
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/hmm-bot/venv/bin/python3 /opt/hmm-bot/runner.py
