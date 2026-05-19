@@ -3,25 +3,34 @@ window {
     color: #e0e0e0;
 }
 
-headerbar {
-    background-color: #0d0d1a;
-    color: #ffffff;
-    border-bottom: 1px solid #333;
+/* Force headerbar dark in both focused and unfocused states */
+headerbar,
+headerbar:backdrop {
+    background-color: #0d0d1a !important;
+    background-image: none !important;
+    border-bottom: 1px solid #444;
+    box-shadow: none;
 }
 
-headerbar .title {
-    color: #ffffff;
+headerbar .title,
+headerbar:backdrop .title {
+    color: #ffffff !important;
     font-weight: bold;
 }
 
-headerbar .subtitle {
-    color: #b0bec5;
+headerbar .subtitle,
+headerbar:backdrop .subtitle {
+    color: #90a4ae !important;
 }
 
-headerbar button {
-    color: #e0e0e0;
+headerbar button,
+headerbar:backdrop button,
+headerbar button label,
+headerbar:backdrop button label {
+    color: #e0e0e0 !important;
 }
 
+/* All labels default to readable grey */
 label {
     color: #e0e0e0;
 }
@@ -63,15 +72,32 @@ label {
     font-size: 0.85em;
 }
 
-.action-btn {
+/* Buttons — force dark text on light blue, and visible text on plain buttons */
+button {
+    color: #e0e0e0;
+}
+
+button label {
+    color: #e0e0e0;
+}
+
+.action-btn,
+.action-btn:hover,
+.action-btn:active {
     background-color: #29b6f6;
-    color: #0d0d1a;
+    background-image: none !important;
+    color: #0d0d1a !important;
     font-weight: bold;
     border-radius: 4px;
 }
 
+.action-btn label {
+    color: #0d0d1a !important;
+    font-weight: bold;
+}
+
 .action-btn:hover {
-    background-color: #4fc3f7;
+    background-color: #4fc3f7 !important;
 }
 
 .status-bar {
@@ -80,10 +106,14 @@ label {
     border-top: 1px solid #333;
 }
 
+.status-bar label {
+    color: #90a4ae;
+}
+
 entry {
     background-color: #16213e;
     color: #e0e0e0;
-    border: 1px solid #333;
+    border: 1px solid #555;
 }
 
 spinbutton {
