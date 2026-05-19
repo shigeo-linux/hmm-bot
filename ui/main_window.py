@@ -33,7 +33,7 @@ def field_label(text):
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, app):
         super().__init__(application=app, title='HMM Bot')
-        self.set_default_size(480, 520)
+        self.set_default_size(480, -1)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_resizable(False)
         self.set_icon_name('hmm-bot')
