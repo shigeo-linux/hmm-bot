@@ -3,15 +3,38 @@ window {
     color: #e0e0e0;
 }
 
+headerbar {
+    background-color: #0d0d1a;
+    color: #ffffff;
+    border-bottom: 1px solid #333;
+}
+
+headerbar .title {
+    color: #ffffff;
+    font-weight: bold;
+}
+
+headerbar .subtitle {
+    color: #b0bec5;
+}
+
+headerbar button {
+    color: #e0e0e0;
+}
+
+label {
+    color: #e0e0e0;
+}
+
 .field-label {
-    color: #9e9e9e;
+    color: #b0bec5;
     font-size: 0.9em;
 }
 
 .section-title {
     font-weight: bold;
     font-size: 1.0em;
-    color: #b0bec5;
+    color: #e0e0e0;
     margin-top: 4px;
 }
 
