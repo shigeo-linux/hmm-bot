@@ -34,6 +34,11 @@ exec /opt/hmm-bot/venv/bin/python3 /opt/hmm-bot/hmm_bot.py "$@"
 EOF
 sudo chmod +x /usr/local/bin/hmm-bot
 
+echo "Installing icon..."
+sudo mkdir -p /usr/share/icons/hicolor/scalable/apps
+sudo cp "${INSTALL_DIR}/hmm-bot.svg" /usr/share/icons/hicolor/scalable/apps/hmm-bot.svg
+sudo gtk-update-icon-cache -f -t /usr/share/icons/hicolor 2>/dev/null || true
+
 echo "Creating config directory..."
 mkdir -p "$HOME/.config/${APP_NAME}"
 
