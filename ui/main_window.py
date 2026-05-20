@@ -225,7 +225,7 @@ class MainWindow(Gtk.ApplicationWindow):
                 from features import build_features
                 from regime import train, regime_series
                 from runner import _sweep_best, _format_message, BARS_PER_YEAR
-                from paper_trader import backtest, DEFAULT_FEE_RATE
+                from paper_trader import backtest, DEFAULT_FEE_RATE, DEFAULT_MIN_HOLD
                 import datetime as dt
 
                 ohlcv = fetch_ohlcv('XBTUSD', '1d', 730)
@@ -242,16 +242,27 @@ class MainWindow(Gtk.ApplicationWindow):
 
                 best = _sweep_best(ohlcv, regimes)
 
-                bah = backtest(ohlcv, regimes, allow_short=False,
-                               confidence_threshold=1.1, fee_rate=0)
-                bah_ann = (1 + bah['fwd_ret']).prod() ** (BARS_PER_YEAR / len(bah)) - 1
+                thresh, hold = best[0], best[1]
+                bt = backtest(ohlcv, regimes, allow_short=False,
+                              confidence_threshold=thresh,
+                              fee_rate=DEFAULT_FEE_RATE,
+                              min_hold=hold)
+
+                initial = 10_000.0
+                strat_equity = bt['equity'].iloc[-1]
+                strat_total  = (strat_equity / initial - 1) * 100
+                bah_equity   = bt['bah_equity'].iloc[-1]
+                bah_total    = (bah_equity / initial - 1) * 100
+                start_date   = bt.index[0].strftime('%b %Y')
+                end_date     = bt.index[-1].strftime('%b %Y')
 
                 last_sigs = [
                     (ts, row['state'], row['confidence'])
                     for ts, row in regimes.tail(5).iterrows()
                 ]
-                msg = _format_message(regime, conf, p_bull, p_side, p_bear,
-                                      best, last_sigs, bah_ann)
+                msg = _format_message(regime, conf, p_bull, p_side, p_bear, best, last_sigs,
+                                      strat_total, strat_equity, bah_total, bah_equity,
+                                      start_date, end_date)
                 send_message(token, chat_id, msg)
 
                 now_str = dt.datetime.now().isoformat(sep=' ', timespec='seconds')

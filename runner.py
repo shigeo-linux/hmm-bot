@@ -52,28 +52,33 @@ def _sweep_best(ohlcv, regimes):
     return best
 
 
-def _format_message(regime, conf, p_bull, p_side, p_bear, best, last_signals, bah_ann):
-    thresh, hold, sharpe, ann_ret, total_ret, max_dd = best
+def _format_message(regime, conf, p_bull, p_side, p_bear, best, last_signals,
+                    strat_total, strat_equity, bah_total, bah_equity, start_date, end_date):
+    thresh, hold, sharpe, ann_ret, _, max_dd = best
 
     regime_emoji = {'BULL': '🟢', 'BEAR': '🔴', 'SIDEWAYS': '🟡'}.get(regime, '⚪')
+    strat_arrow = '📈' if strat_total >= 0 else '📉'
+    bah_arrow   = '📈' if bah_total >= 0 else '📉'
 
     lines = [
-        f'🤖 <b>BTC/USD Regime Signal</b>',
+        '🤖 <b>BTC/USD Regime Signal</b>',
         f'<b>{datetime.date.today()}</b>',
         '',
         f'{regime_emoji} <b>{regime}</b> — {conf:.1f}% confidence',
         f'Bull: {p_bull:.1f}% | Sideways: {p_side:.1f}% | Bear: {p_bear:.1f}%',
         '',
+        f'💼 <b>Paper trade</b> ({start_date} → {end_date})',
+        f'{strat_arrow} Strategy:   ${strat_equity:,.0f}  ({strat_total:+.1f}%)',
+        f'{bah_arrow} Buy &amp; hold: ${bah_equity:,.0f}  ({bah_total:+.1f}%)',
+        '',
         f'🏆 <b>Best params</b> ({thresh*100:.0f}% threshold · {hold}d hold)',
-        f'Sharpe: {sharpe:.2f} · Ann. return: {ann_ret*100:+.1f}%',
-        f'Max DD: {max_dd*100:.1f}% vs B&H: {bah_ann*100:+.1f}%',
+        f'Sharpe: {sharpe:.2f} · Ann: {ann_ret*100:+.1f}% · Max DD: {max_dd*100:.1f}%',
         '',
         '📅 <b>Last 5 signals</b>',
     ]
 
     for ts, state, confidence in last_signals[-5:]:
-        date_str = ts.strftime('%Y-%m-%d')
-        lines.append(f'{date_str}  {state:<10}  {confidence*100:.1f}%')
+        lines.append(f'{ts.strftime("%Y-%m-%d")}  {state:<10}  {confidence*100:.1f}%')
 
     return '\n'.join(lines)
 
@@ -115,19 +120,29 @@ def run():
         logging.info("Running parameter sweep")
         best = _sweep_best(ohlcv, regimes)
 
-        # Buy-and-hold annualised return for context
-        bah = backtest(ohlcv, regimes, allow_short=False,
-                       confidence_threshold=1.1,  # never trades = pure B&H returns
-                       fee_rate=0)
-        bah_strat = bah['fwd_ret']
-        bah_ann = (1 + bah_strat).prod() ** (BARS_PER_YEAR / len(bah_strat)) - 1
+        # Re-run the winning backtest to get equity curve
+        thresh, hold = best[0], best[1]
+        bt = backtest(ohlcv, regimes, allow_short=False,
+                      confidence_threshold=thresh,
+                      fee_rate=DEFAULT_FEE_RATE,
+                      min_hold=hold)
+
+        initial = 10_000.0
+        strat_equity = bt['equity'].iloc[-1]
+        strat_total  = (strat_equity / initial - 1) * 100
+        bah_equity   = bt['bah_equity'].iloc[-1]
+        bah_total    = (bah_equity / initial - 1) * 100
+        start_date   = bt.index[0].strftime('%b %Y')
+        end_date     = bt.index[-1].strftime('%b %Y')
 
         last_signals = [
             (ts, row['state'], row['confidence'])
             for ts, row in regimes.tail(5).iterrows()
         ]
 
-        msg = _format_message(regime, conf, p_bull, p_side, p_bear, best, last_signals, bah_ann)
+        msg = _format_message(regime, conf, p_bull, p_side, p_bear, best, last_signals,
+                              strat_total, strat_equity, bah_total, bah_equity,
+                              start_date, end_date)
         send_message(config.telegram_token, config.telegram_chat_id, msg)
 
         status = f'OK — {regime} ({conf:.1f}%)'
