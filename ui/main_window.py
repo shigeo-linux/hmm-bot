@@ -226,6 +226,7 @@ class MainWindow(Gtk.ApplicationWindow):
                 from regime import train, regime_series
                 from runner import _sweep_best, _format_message, BARS_PER_YEAR
                 from paper_trader import backtest, DEFAULT_FEE_RATE, DEFAULT_MIN_HOLD
+                from trade_log import update as trade_update, format_trade_section
                 import datetime as dt
 
                 ohlcv = fetch_ohlcv('XBTUSD', '1d', 730)
@@ -260,9 +261,14 @@ class MainWindow(Gtk.ApplicationWindow):
                     (ts, row['state'], row['confidence'])
                     for ts, row in regimes.tail(5).iterrows()
                 ]
+                current_price = float(ohlcv['close'].iloc[-1])
+                trade_state = trade_update(regime, conf, current_price)
+                trade_section = format_trade_section(
+                    trade_state['open_trade'], trade_state['closed_trades'], current_price
+                )
                 msg = _format_message(regime, conf, p_bull, p_side, p_bear, best, last_sigs,
                                       strat_total, strat_equity, bah_total, bah_equity,
-                                      start_date, end_date)
+                                      start_date, end_date, trade_section)
                 send_message(token, chat_id, msg)
 
                 now_str = dt.datetime.now().isoformat(sep=' ', timespec='seconds')

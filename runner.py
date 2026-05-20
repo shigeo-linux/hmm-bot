@@ -13,6 +13,7 @@ from data import fetch_ohlcv
 from features import build_features
 from regime import train, regime_series
 from paper_trader import backtest, DEFAULT_FEE_RATE, DEFAULT_MIN_HOLD
+from trade_log import update as trade_update, format_trade_section
 from telegram_client import send_message, TelegramError
 
 BARS_PER_YEAR = 365
@@ -53,7 +54,8 @@ def _sweep_best(ohlcv, regimes):
 
 
 def _format_message(regime, conf, p_bull, p_side, p_bear, best, last_signals,
-                    strat_total, strat_equity, bah_total, bah_equity, start_date, end_date):
+                    strat_total, strat_equity, bah_total, bah_equity, start_date, end_date,
+                    trade_section):
     thresh, hold, sharpe, ann_ret, _, max_dd = best
 
     regime_emoji = {'BULL': '🟢', 'BEAR': '🔴', 'SIDEWAYS': '🟡'}.get(regime, '⚪')
@@ -67,7 +69,9 @@ def _format_message(regime, conf, p_bull, p_side, p_bear, best, last_signals,
         f'{regime_emoji} <b>{regime}</b> — {conf:.1f}% confidence',
         f'Bull: {p_bull:.1f}% | Sideways: {p_side:.1f}% | Bear: {p_bear:.1f}%',
         '',
-        f'💼 <b>Paper trade</b> ({start_date} → {end_date})',
+        trade_section,
+        '',
+        f'💼 <b>Backtest</b> ({start_date} → {end_date})',
         f'{strat_arrow} Strategy:   ${strat_equity:,.0f}  ({strat_total:+.1f}%)',
         f'{bah_arrow} Buy &amp; hold: ${bah_equity:,.0f}  ({bah_total:+.1f}%)',
         '',
@@ -140,9 +144,16 @@ def run():
             for ts, row in regimes.tail(5).iterrows()
         ]
 
+        current_price = float(ohlcv['close'].iloc[-1])
+        trade_state = trade_update(regime, conf, current_price)
+        trade_section = format_trade_section(
+            trade_state['open_trade'], trade_state['closed_trades'], current_price
+        )
+        logging.info(f"Trade log: {trade_state['action']}")
+
         msg = _format_message(regime, conf, p_bull, p_side, p_bear, best, last_signals,
                               strat_total, strat_equity, bah_total, bah_equity,
-                              start_date, end_date)
+                              start_date, end_date, trade_section)
         send_message(config.telegram_token, config.telegram_chat_id, msg)
 
         status = f'OK — {regime} ({conf:.1f}%)'
