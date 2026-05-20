@@ -1,9 +1,13 @@
 [Desktop Entry]
+Version=1.0
+Type=Application
 Name=HMM Bot
+GenericName=Regime Signal
 Comment=BTC/USD regime detection and Telegram signals
 Exec=/opt/hmm-bot/venv/bin/python3 /opt/hmm-bot/hmm_bot.py
 Icon=/opt/hmm-bot/hmm-bot.svg
 StartupWMClass=com.hmmbot.app
 Terminal=false
-Type=Application
 Categories=Finance;Utility;
+Keywords=bitcoin;trading;regime;telegram;
+StartupNotify=true
